@@ -1,0 +1,42 @@
+D1 = "I love cats"
+D2 = "Cats are chill"
+D3 = "I am late"
+def preprocess_text(text):
+    return text.lower().split()
+def add_padding(tokens):
+    return ["<s>"] + tokens + ["</s>"]
+def extract_windows(tokens, window_size=1):
+    windows = []
+    for i in range(window_size, len(tokens) - window_size):
+        window = tokens[i - window_size : i + window_size + 1]
+        windows.append(" ".join(window))
+    return windows
+
+def build_vocab(all_windows):
+    unique = sorted(set(all_windows))
+    vocab = {window: idx for idx, window in enumerate(unique)}
+    return vocab
+
+def vectorize_doc(doc_windows, vocab):
+    vector = [0] * len(vocab)
+    for window in doc_windows:
+        if window in vocab:
+            vector[vocab[window]] = 1
+    return vector
+all_docs = [D1, D2, D3]
+all_doc_windows = []
+for doc in all_docs:
+    tokens   = preprocess_text(doc)
+    padded   = add_padding(tokens)
+    windows  = extract_windows(padded, window_size=1)
+    all_doc_windows.append(windows)
+all_windows_flat = [w for doc_windows in all_doc_windows for w in doc_windows]
+vocab = build_vocab(all_windows_flat)
+vectors = [vectorize_doc(doc_windows, vocab) for doc_windows in all_doc_windows]
+print("=== Vocabulaire (fenêtres triées) ===")
+for window, idx in vocab.items():
+    print(f"  {idx}: \"{window}\"")
+print()
+for i, (doc, vec) in enumerate(zip(all_docs, vectors), 1):
+    print(f"D{i}: {doc}")
+    print(f"     {vec}")
